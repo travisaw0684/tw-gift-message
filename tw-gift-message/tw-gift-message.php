@@ -13,6 +13,7 @@ if (!defined('ABSPATH')) {
 }
 
 class TW_Gift_Message {
+    private $text_domain = 'tw-gift-message';
 
     public function __construct() {
         // Initialize hooks
@@ -115,6 +116,34 @@ class TW_Gift_Message {
             }
         }
     }
+
+    // Add gift message to order email
+    public function add_gift_message_to_email($order, $sent_to_admin, $plain_text) {
+        foreach ($order->get_items() as $item) {
+            $gift_message = $item->get_meta(esc_html__('Gift Message', $this->text_domain));
+            if ($gift_message) {
+                if ($plain_text) {
+                    echo esc_html__('Gift Message', $this->text_domain) . ': ' . esc_html($gift_message) . "\n";
+                } else {
+                    echo '<p><strong>' . esc_html__('Gift Message', $this->text_domain) . ':</strong> ' . esc_html($gift_message) . '</p>';
+                }
+            }
+        }
+    }
+
+    // Enqueue JavaScript for character counter
+    public function enqueue_scripts() {
+        if (is_product()) {
+            wp_enqueue_script('tw-gift-message', plugins_url('/js/gift-message.js', __FILE__), ['jquery'], '1.0.0', true);
+            wp_enqueue_style('tw-gift-message', plugins_url('/css/gift-message.css', __FILE__), [], '1.0.0');
+        }
+    }
+
+    // Extensibility hook
+    public function gift_message_saved($order_id, $gift_message) {
+        do_action('tw_gift_message_saved', $order_id, $gift_message);
+    }
 }
 
+new TW_Gift_Message();
 ?>
