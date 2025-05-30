@@ -52,6 +52,28 @@ class TW_Gift_Message {
         </div>
         <?php
     }
+
+    // Save gift message to cart
+    public function add_gift_message_to_cart($cart_item_data, $product_id, $variation_id) {
+        if (isset($_POST['gift_message']) && current_user_can('read')) {
+            $gift_message = sanitize_textarea_field(wp_unslash($_POST['gift_message']));
+            if (strlen($gift_message) <= 150) {
+                $cart_item_data['gift_message'] = $gift_message;
+            }
+        }
+        return $cart_item_data;
+    }
+
+    // Display gift message in cart and checkout
+    public function display_gift_message_in_cart($item_data, $cart_item) {
+        if (isset($cart_item['gift_message']) && !empty($cart_item['gift_message'])) {
+            $item_data[] = [
+                'key'   => esc_html__('Gift Message', $this->text_domain),
+                'value' => esc_html($cart_item['gift_message']),
+            ];
+        }
+        return $item_data;
+    }
 }
 
 ?>
