@@ -12,4 +12,46 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+class TW_Gift_Message {
+
+    public function __construct() {
+        // Initialize hooks
+        add_action('woocommerce_init', [$this, 'init_hooks']);
+    }
+
+    public function init_hooks() {
+        // Frontend input field
+        add_action('woocommerce_before_add_to_cart_button', [$this, 'add_gift_message_field']);
+        // Save to cart
+        add_filter('woocommerce_add_cart_item_data', [$this, 'add_gift_message_to_cart'], 10, 3);
+        // Display in cart and checkout
+        add_filter('woocommerce_get_item_data', [$this, 'display_gift_message_in_cart'], 10, 2);
+        // Save to order
+        add_action('woocommerce_checkout_create_order_line_item', [$this, 'save_gift_message_to_order'], 10, 4);
+        // Display in order details
+        add_action('woocommerce_order_item_meta_start', [$this, 'display_gift_message_in_order'], 10, 3);
+        // Admin order column
+        add_filter('manage_edit-shop_order_columns', [$this, 'add_gift_message_admin_column']);
+        add_action('manage_shop_order_posts_custom_column', [$this, 'render_gift_message_admin_column'], 10, 2);
+        // Email display
+        add_action('woocommerce_email_order_meta', [$this, 'add_gift_message_to_email'], 10, 3);
+        // JavaScript for character counter
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+    }
+
+    // Add gift message input field
+    public function add_gift_message_field() {
+        if (!current_user_can('read')) {
+            return;
+        }
+        ?>
+        <div class="tw-gift-message-field">
+            <label for="gift_message"><?php esc_html_e('Gift Message (max 150 characters)', $this->text_domain); ?></label>
+            <textarea id="gift_message" name="gift_message" maxlength="150" rows="3"></textarea>
+            <p class="gift-message-counter">Characters: <span id="gift-message-count">0</span>/150</p>
+        </div>
+        <?php
+    }
+}
+
 ?>
