@@ -74,6 +74,47 @@ class TW_Gift_Message {
         }
         return $item_data;
     }
+
+    // Save gift message to order
+    public function save_gift_message_to_order($item, $cart_item_key, $values, $order) {
+        if (isset($values['gift_message']) && !empty($values['gift_message'])) {
+            $item->add_meta_data(esc_html__('Gift Message', $this->text_domain), esc_html($values['gift_message']));
+        }
+    }
+
+    // Display gift message in order details
+    public function display_gift_message_in_order($item_id, $item, $order) {
+        $gift_message = $item->get_meta(esc_html__('Gift Message', $this->text_domain));
+        if ($gift_message) {
+            echo '<p><strong>' . esc_html__('Gift Message', $this->text_domain) . ':</strong> ' . esc_html($gift_message) . '</p>';
+        }
+    }
+
+    // Add gift message column to admin orders
+    public function add_gift_message_admin_column($columns) {
+        $new_columns = [];
+        foreach ($columns as $key => $value) {
+            $new_columns[$key] = $value;
+            if ($key === 'order_status') {
+                $new_columns['gift_message'] = esc_html__('Gift Message', $this->text_domain);
+            }
+        }
+        return $new_columns;
+    }
+
+    // Render gift message in admin column
+    public function render_gift_message_admin_column($column, $post_id) {
+        if ($column === 'gift_message') {
+            $order = wc_get_order($post_id);
+            foreach ($order->get_items() as $item) {
+                $gift_message = $item->get_meta(esc_html__('Gift Message', $this->text_domain));
+                if ($gift_message) {
+                    echo esc_html(substr($gift_message, 0, 50)) . (strlen($gift_message) > 50 ? '...' : '');
+                    break;
+                }
+            }
+        }
+    }
 }
 
 ?>
