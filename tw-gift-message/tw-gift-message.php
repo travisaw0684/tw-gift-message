@@ -18,6 +18,7 @@ class TW_Gift_Message {
     public function __construct() {
         // Initialize hooks
         add_action('woocommerce_init', [$this, 'init_hooks']);
+        add_action('rest_api_init', [$this, 'register_rest_routes']);
     }
 
     public function init_hooks() {
@@ -39,7 +40,45 @@ class TW_Gift_Message {
         // JavaScript for character counter
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
+    
+    // Register REST API routes
+    public function register_rest_routes() {
+        
+        register_rest_route('tw-gift-message/v1', '/order', [
+            'methods'  => 'GET',
+            'callback' => [$this, 'get_gift_messages'],
+            'permission_callback' => function () {
+                return current_user_can('manage_woocommerce');
+            },
+        ]);
+    }
+    
 
+    // Callback for REST API to get gift messages
+    public function get_gift_messages(WP_REST_Request $request) {
+        $orders = wc_get_orders([
+            'limit' => -3,
+            'status' => 'completed',
+        ]);
+        
+        $gift_messages = [];
+        foreach ($orders as $order) {
+            foreach ($order->get_items() as $item) {
+                $gift_message = $item->get_meta(esc_html__('Gift Message', $this->text_domain));
+                if ($gift_message) {
+                    $gift_messages[] = [
+                        'order_id' => $order->get_id(),
+                        'product_name' => $item->get_name(),
+                        'gift_message' => $gift_message,
+                    ];
+                }
+            }
+        }
+        
+        var_dump($gift_message)
+        
+        //return new WP_REST_Response($gift_messages, 200);
+    }
     // Add gift message input field
     public function add_gift_message_field() {
         if (!current_user_can('read')) {
